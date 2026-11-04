@@ -2,29 +2,37 @@
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
+import url from 'url';
 
 // requestListener to główna funkcja uruchamiana za każdym razem, 
 // gdy przeglądarka wysyła żądanie (req) do naszego serwera.
 // req (request) = co klient od nas chce, res (response) = czym odpowiadamy.
 async function requestListener(req: IncomingMessage, res: ServerResponse) {
-  
-  // 1. path.join bezpiecznie skleja ścieżkę do pliku na dysku.
-  // __dirname to obecny folder (src), do którego dokładamy 'static' i 'index.html'.
-  const filePath = path.join(__dirname, 'static', 'index.html');
-  
-  // 2. fs.promises.readFile asynchronicznie otwiera i czyta plik z dysku.
-  // Słowo 'await' zatrzymuje ten krok na ułamek sekundy, aż plik w pełni wczyta się do zmiennej 'data'.
-  const data = await fs.promises.readFile(filePath);
+  const parsedUrl = url.parse(req.url || '')
+  let data = ''
+  let statusCode = 200
+  try {
+    let pathName = parsedUrl.pathname
+    if (pathName === '/') {
+      pathName = '/index.html'
+    } else {
+      pathName = `${pathName}.html`
+    }
+    const filePath = path.join(__dirname, `static${pathName}`);
+    data = await fs.promises.readFile(filePath, 'utf-8');
+  } catch {
+    data = await fs.promises.readFile(path.join(__dirname, 'static/404.html'), 'utf-8');
+    statusCode = 404
+  } 
   
   // 3. res.writeHead wysyła nagłówki HTTP (instrukcje dla przeglądarki):
   // - 200: kod oznaczający sukces ("wszystko w porządku, plik istnieje"),
   // - 'Content-Type': informuje przeglądarkę, że przesyłamy dokument HTML,
   // - 'Content-Length': podaje dokładny rozmiar pliku w bajtach (data.length).
-  res.writeHead(200, {
+  res.writeHead(statusCode, {
     'Content-Type' : 'text/html',
     'Content-Length' : data.length
   });
-  
   // Przekazujemy zawartość pliku do odpowiedzi i zamykamy połączenie
   res.write(data);
   res.end();

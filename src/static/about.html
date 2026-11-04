@@ -1,16 +1,163 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website: About</title>
+    <title>About | TypeScript Web Server</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f1117;
+            --card-bg: #181b24;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-yellow: #facc15;
+            --accent-blue: #38bdf8;
+            --accent-green: #4ade80;
+            --border-color: #2e3446;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+            background-size: 24px 24px;
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 640px;
+            width: 100%;
+        }
+
+        nav {
+            margin-bottom: 2rem;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 0.75rem;
+            background: var(--card-bg);
+            padding: 0.5rem;
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            width: fit-content;
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+            display: block;
+        }
+
+        nav a:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        nav a[href="/about"] {
+            background: var(--accent-yellow);
+            color: #000;
+            font-weight: 600;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 2px solid var(--text-main);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 8px 8px 0px var(--accent-green);
+            position: relative;
+        }
+
+        .badge {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: rgba(74, 222, 128, 0.12);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+            padding: 0.3rem 0.75rem;
+            border-radius: 999px;
+            margin-bottom: 1.25rem;
+        }
+
+        h1 {
+            font-size: 1.85rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        p {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-list {
+            list-style: none;
+            display: grid;
+            gap: 0.6rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 1.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tech-list li::before {
+            content: "▹ ";
+            color: var(--accent-green);
+        }
+    </style>
 </head>
 <body>
-    <h1>About page!</h1>
-    <p>What you think about my about (he he) page?</p>  
-    <nav>
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
-        </ul>
+    <div class="container">
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/dad-joke">Dad Joke</a></li>
+            </ul>
+        </nav>
+
+        <main class="card">
+            <span class="badge">Architecture & Stack</span>
+            <h1>About This Project</h1>
+            <p>Created as part of my backend & TypeScript learning journey. It handles static file routing, custom 404 fallbacks, and asynchronous REST API fetching.</p>
+            <ul class="tech-list">
+                <li>TypeScript 5.x with strict mode enabled</li>
+                <li>Node.js native HTTP & FS Promises API</li>
+                <li>Fast live-reloading powered by tsx</li>
+                <li>Typed JSON payloads from icanhazdadjoke API</li>
+            </ul>
+        </main>
+    </div>
 </body>
-</html>
+</html> 

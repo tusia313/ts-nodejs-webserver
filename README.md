@@ -1,6 +1,12 @@
 # 🚀 TypeScript & Node.js Web Server (Dad Jokes API)
 
-A lightweight, strictly-typed Node.js server built with TypeScript. It fetches random jokes from the external **icanhazdadjoke API**, validates the payload using TypeScript interfaces, and serves the response via Node's native `http` module.
+A lightweight, strictly-typed Node.js server built with TypeScript. It fetches random jokes from the external **icanhazdadjoke API**, validates the payload using TypeScript interfaces, and serves static pages (`Home`, `About`, `404`) via Node's native `http` module.
+
+## 📷 Preview
+
+| Home Page | About Page | Dad Joke View |
+| :---: | :---: | :---: |
+| ![Home](./screenshots/main.png) | ![About](./screenshots/about.png) | ![Joke](./screenshots/joke.png) |
 
 ## 🛠️ Tech Stack
 
@@ -29,8 +35,9 @@ A lightweight, strictly-typed Node.js server built with TypeScript. It fetches r
 ## 📈 Status / Roadmap
 
 - [x] Project setup with TypeScript 5 & `tsx`
-- [ ] HTTP server implementation (`http` module)
-- [ ] `icanhazdadjoke.com` API integration & response typing
+- [x] HTTP server implementation & static routing (`http` & `fs` modules)
+- [x] Shared CSS stylesheet integration
+- [x] `icanhazdadjoke.com` API integration & response typing
 
 ---
 *Created by Marta Łoskot :)*

@@ -7,7 +7,7 @@ import path from 'path';
 //url – pomaga rozbić adres wpisany przez użytkownika (np. http://localhost:3000/about?user=marta) na czyste części składowe, takie jak sama ścieżka (/about).
 import url from 'url';
 
-
+//interface Joke { id: string; joke: string; status: number; } – kontrakt dla TypeScriptu. Dane przychodzące z internetu są dla kompilatora niewiadomą, więc ten interfejs mówi mu wprost: „obiekt JSON, który pobierzemy z API, będzie miał dokładnie te trzy pola o takich typach”. Dzięki temu poniżej, gdy wpiszesz joke., edytor sam podpowie Ci właściwość joke.joke.
 interface Joke {
   id: string;
   joke: string;
@@ -46,6 +46,11 @@ async function requestListener(req: IncomingMessage, res: ServerResponse) {
     data = await fs.promises.readFile(path.join(__dirname, 'static/404.html'), 'utf-8');
     statusCode = 404
   } 
+//const response = await fetch('[https://icanhazdadjoke.com/](https://icanhazdadjoke.com/)', { headers: ... }) – Twój serwer wysyła w tle zapytanie HTTP GET do zewnętrznego API. Nagłówki są tu kluczowe:
+//'Accept': 'application/json' – domyślnie to API zwraca całą stronę HTML. Ten nagłówek mówi serwerowi z żartami: „nie jestem przeglądarką, poproszę same surowe dane w formacie JSON”.
+//'user-agent': 'Node.js Server' – twórcy icanhazdadjoke wymagają przedstawienia się w zapytaniu (dobra praktyka przy publicznych API, żeby nie zostać zablokowanym jako anonimowy bot).
+//const joke: Joke = await response.json() – rozpakowuje odpowiedź z formatu JSON do zwykłego obiektu JavaScript i przypisuje mu nasz typ Joke.
+//data = data.replace(/{{joke}}/gm, JSON.stringify(joke.joke)) – serwer przeszukuje wczytany wcześniej tekst pliku HTML (data), znajduje w nim znacznik {{joke}} (wyrażenie regularne z flagami gm oznacza: szukaj globalnie i w wielu liniach) i podmienia go na prawdziwy tekst żartu pobrany z API. (Wskazówka: jeśli wstawisz tam samo joke.joke zamiast JSON.stringify(joke.joke), żart wyświetli się na stronie czysto, bez dodatkowych cudzysłowów na początku i na końcu).
   if (parsedUrl.pathname === '/dad-joke') {
     const response = await fetch('https://icanhazdadjoke.com/', {
       headers: {

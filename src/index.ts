@@ -1,83 +1,95 @@
-//http – stawia serwer i obsługuje ruch sieciowy
+// 1. IMPORTY WBUDOWANYCH MODUŁÓW NODE.JS
+// http – pozwala stworzyć serwer i obsługiwać zapytania sieciowe.
+// IncomingMessage i ServerResponse to typy TypeScriptu opisujące obiekty zapytania (req) i odpowiedzi (res).
 import http, { IncomingMessage, ServerResponse } from 'http';
-//fs (File System) – pozwala Node'owi czytać pliki z dysku twardego.
+// fs (File System) – służy do odczytywania plików (HTML, CSS) z dysku twardego.
 import fs from 'fs';
-//path – bezpiecznie łączy ścieżki do folderów i plików (dba o odpowiednie ukośniki / lub \ w zależności od tego, czy kod działa na macOS, czy na Windowsie).
+// path – bezpiecznie łączy ścieżki do folderów i plików (niezależnie od systemu operacyjnego).
 import path from 'path';
-//url – pomaga rozbić adres wpisany przez użytkownika (np. http://localhost:3000/about?user=marta) na czyste części składowe, takie jak sama ścieżka (/about).
+// url – rozbija adres wpisany w przeglądarce na części składowe (np. wyciąga samą ścieżkę '/about').
 import url from 'url';
 
-//interface Joke { id: string; joke: string; status: number; } – kontrakt dla TypeScriptu. Dane przychodzące z internetu są dla kompilatora niewiadomą, więc ten interfejs mówi mu wprost: „obiekt JSON, który pobierzemy z API, będzie miał dokładnie te trzy pola o takich typach”. Dzięki temu poniżej, gdy wpiszesz joke., edytor sam podpowie Ci właściwość joke.joke.
+// 2. KONTRAKT TYPESCRIPT (INTERFACE)
+// Określa dokładny kształt obiektu JSON, który otrzymamy z zewnętrznego API icanhazdadjoke.
 interface Joke {
   id: string;
   joke: string;
   status: number;
 }
 
-
-//Słowo kluczowe async przed funkcją pozwala używać wewnątrz await – dzięki temu serwer podczas czytania pliku z dysku nie zawiesza całego programu, tylko czeka na wczytanie danych w tle.
-//const parsedUrl = url.parse(req.url || '') – wyciąga adres URL z zapytania przeglądarki. Konstrukcja || '' (lub pusty ciąg znaków) to zabezpieczenie dla TypeScriptu: gdyby z jakiegoś powodu req.url było puste (undefined), funkcja url.parse nie wyrzuci błędu.
-//let data = '' oraz let statusCode = 200 – przygotowujemy zmienne na treść pliku HTML oraz kod odpowiedzi HTTP (domyślnie zakładamy optymistycznie sukces, czyli 200 OK).
-// requestListener to główna funkcja uruchamiana za każdym razem, 
-// gdy przeglądarka wysyła żądanie (req) do naszego serwera.
-// req (request) = co klient od nas chce, res (response) = czym odpowiadamy.
+// 3. GŁÓWNA FUNKCJA OBSŁUGUJĄCA RUCH (REQUEST LISTENER)
+// Uruchamia się automatycznie za każdym razem, gdy przeglądarka żąda strony lub pliku (np. style.css).
+// Słowo 'async' pozwala na użycie 'await' wewnątrz funkcji (czytanie plików i pobieranie API bez blokowania serwera).
 async function requestListener(req: IncomingMessage, res: ServerResponse) {
-  const parsedUrl = url.parse(req.url || '')
-  let data = ''
-  let statusCode = 200
-//Blok try – próba odnalezienia i wczytania pliku (linie 14–22)
-//if (pathName === '/') – jeśli użytkownik wszedł na stronę główną (localhost:3000/), zamieniamy sam ukośnik na /index.html.
-//else { pathName = ${pathName}.html } – to bardzo sprytny zabieg (tzw. clean URLs). Jeśli wpiszesz w przeglądarce localhost:3000/contact, serwer sam doklei końcówkę .html i poszuka pliku /contact.html.
-//const filePath = path.join(__dirname, static${pathName}) – zmienna __dirname oznacza ścieżkę do folderu, w którym aktualnie znajduje się Twój kod (czyli src). Funkcja path.join skleja ją z podfolderem static i nazwą pliku, tworząc pełną ścieżkę na Twoim Macu (np. /Users/martaloskot/.../src/static/index.html).
-//data = await fs.promises.readFile(filePath, 'utf-8') – serwer asynchronicznie otwiera plik i wczytuje jego tekst (w kodowaniu utf-8) do zmiennej data.
+  // Rozbijamy adres URL zapytania. Konstrukcja (req.url || '') chroni przed wartością undefined.
+  const parsedUrl = url.parse(req.url || '');
+  
+  // Przygotowujemy zmienne na zawartość pliku oraz domyślny kod sukcesu HTTP (200 OK).
+  let data = '';
+  let statusCode = 200;
+
+  // 4. ROUTING I ODCZYT PLIKÓW Z DYSKU (BLOK TRY / CATCH)
   try {
-    let pathName = parsedUrl.pathname
+    let pathName = parsedUrl.pathname || '/';
+
+    // Jeśli użytkownik wchodzi na stronę główną ('/'), wskazujemy plik '/index.html'.
     if (pathName === '/') {
-      pathName = '/index.html'
-    } else {
-      pathName = `${pathName}.html`
+      pathName = '/index.html';
+    } 
+    // Jeśli w ścieżce nie ma kropki (czyli to np. '/about', a nie '/style.css'), 
+    // automatycznie doklejamy końcówkę '.html' (tzw. Clean URLs).
+    else if (!pathName.includes('.')) {
+      pathName = `${pathName}.html`;
     }
-    const filePath = path.join(__dirname, `static${pathName}`);
+
+    // Sklejamy pełną ścieżkę do pliku w folderze 'src/static/' i wczytujemy go jako tekst UTF-8.
+    const filePath = path.join(__dirname, 'static', pathName);
     data = await fs.promises.readFile(filePath, 'utf-8');
-//. Blok catch – koło ratunkowe, czyli obsługa błędu 404 (linie 23–26)
-//Jeśli użytkownik wpisze w przeglądarce adres, dla którego nie masz pliku (np. localhost:3000/nie-ma-takiej-strony), funkcja readFile z bloku try rzuci błąd (bo plik nie-ma-takiej-strony.html nie istnieje).
-//Wtedy wykonanie kodu natychmiast przeskakuje do bloku catch: zamiast wyłożyć cały serwer, kod wczytuje przygotowany wcześniej plik static/404.html i zmienia statusCode na 404 (Not Found).
   } catch {
-    data = await fs.promises.readFile(path.join(__dirname, 'static/404.html'), 'utf-8');
-    statusCode = 404
-  } 
-//const response = await fetch('[https://icanhazdadjoke.com/](https://icanhazdadjoke.com/)', { headers: ... }) – Twój serwer wysyła w tle zapytanie HTTP GET do zewnętrznego API. Nagłówki są tu kluczowe:
-//'Accept': 'application/json' – domyślnie to API zwraca całą stronę HTML. Ten nagłówek mówi serwerowi z żartami: „nie jestem przeglądarką, poproszę same surowe dane w formacie JSON”.
-//'user-agent': 'Node.js Server' – twórcy icanhazdadjoke wymagają przedstawienia się w zapytaniu (dobra praktyka przy publicznych API, żeby nie zostać zablokowanym jako anonimowy bot).
-//const joke: Joke = await response.json() – rozpakowuje odpowiedź z formatu JSON do zwykłego obiektu JavaScript i przypisuje mu nasz typ Joke.
-//data = data.replace(/{{joke}}/gm, JSON.stringify(joke.joke)) – serwer przeszukuje wczytany wcześniej tekst pliku HTML (data), znajduje w nim znacznik {{joke}} (wyrażenie regularne z flagami gm oznacza: szukaj globalnie i w wielu liniach) i podmienia go na prawdziwy tekst żartu pobrany z API. (Wskazówka: jeśli wstawisz tam samo joke.joke zamiast JSON.stringify(joke.joke), żart wyświetli się na stronie czysto, bez dodatkowych cudzysłowów na początku i na końcu).
+    // KOŁO RATUNKOWE (BŁĄD 404): Jeśli szukany plik nie istnieje na dysku, 
+    // przechwytujemy błąd, wczytujemy stronę 404.html i ustawiamy kod statusu na 404.
+    data = await fs.promises.readFile(path.join(__dirname, 'static', '404.html'), 'utf-8');
+    statusCode = 404;
+  }
+
+  // 5. INTEGRACJA Z ZEWNĘTRZNYM API (TYLKO DLA ŚCIEŻKI /dad-joke)
   if (parsedUrl.pathname === '/dad-joke') {
+    // Wysyłamy zapytanie do API z nagłówkami wymuszającymi format JSON zamiast HTML.
     const response = await fetch('https://icanhazdadjoke.com/', {
       headers: {
         'Accept': 'application/json',
         'user-agent': 'Node.js Server'
       }
     });
+
+    // Odczytujemy odpowiedź i przypisujemy jej nasz interfejs 'Joke'.
     const joke: Joke = await response.json();
-    data = data.replace(/{{joke}}/gm, JSON.stringify(joke.joke));
+
+    // Podmieniamy znacznik {{joke}} w kodzie HTML na prawdziwy żart pobrany z serwera.
+    data = data.replace(/{{joke}}/gm, joke.joke);
   }
 
-  // 3. res.writeHead wysyła nagłówki HTTP (instrukcje dla przeglądarki):
-  // - 200: kod oznaczający sukces ("wszystko w porządku, plik istnieje"),
-  // - 'Content-Type': informuje przeglądarkę, że przesyłamy dokument HTML,
-  // - 'Content-Length': podaje dokładny rozmiar pliku w bajtach (data.length).
+  // 6. ROZPOZNANIE TYPU PLIKU (MIME TYPE)
+  // Domyślnie wysyłamy dokument HTML, ale jeśli przeglądarka prosiła o plik '.css',
+  // zmieniamy nagłówek na 'text/css', aby przeglądarka poprawnie zaaplikowała style.
+  let contentType = 'text/html';
+  if (parsedUrl.pathname?.endsWith('.css')) {
+    contentType = 'text/css';
+  }
+
+  // 7. WYSŁANIE ODPOWIEDZI DO PRZEGLĄDARKI
+  // Ustawiamy kod statusu (200 lub 404), typ zawartości oraz dokładny rozmiar danych w bajtach.
   res.writeHead(statusCode, {
-    'Content-Type' : 'text/html',
-    'Content-Length' : Buffer.byteLength(data, 'utf-8')
+    'Content-Type': contentType,
+    'Content-Length': Buffer.byteLength(data, 'utf-8')
   });
-//Wysłanie odpowiedzi do przeglądarki:
-//res.writeHead(...) – wysyła nagłówki z odpowiednim statusem (200 lub 404), informacją, że to dokument HTML, oraz rozmiarem treści.
-//res.write(data) i res.end() – przesyłają wczytany kod HTML do przeglądarki i zamykają połączenie.
+
+  // Przesyłamy gotową treść i zamykamy połączenie.
   res.write(data);
   res.end();
 }
 
-// Tworzymy serwer HTTP oparty na naszej funkcji i uruchamiamy go na porcie 3000
+// 8. URUCHOMIENIE SERWERA NA PORCIE 3000
 http.createServer(requestListener).listen(3000, () => {
   console.log('Server running at http://localhost:3000/');
 });
